@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sms/providers/visitor_provider.dart';
 import 'add_visitor_screen.dart';
 import 'complaint_screen.dart';
 import 'visitor_log_screen.dart';
@@ -78,6 +80,37 @@ class _Header extends StatelessWidget {
                 child: _StatCard(value: '3', label: 'Open complaints'),
               ),
             ],
+          ),
+
+          // Add inside _Header's Column, after the stat row:
+          Consumer<VisitorProvider>(
+            builder: (context, provider, _) {
+              final count = provider.pendingSyncCount;
+              if (count == 0) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Row(
+                  children: [
+                    const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$count ${count == 1 ? 'entry' : 'entries'} pending sync',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

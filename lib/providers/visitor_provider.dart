@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../core/local/hive_service.dart';
-import '../core/network/connectivity_service.dart';
-import '../core/network/visitor_service.dart';
-import '../data/models/visitor_model.dart';
+import 'package:sms/core/local/hive_service.dart';
+import 'package:sms/core/network/connectivity_service.dart';
+import 'package:sms/core/network/visitor_service.dart';
+import 'package:sms/data/models/visitor_model.dart';
 
 class VisitorProvider extends ChangeNotifier {
   final VisitorService _apiService = VisitorService();
@@ -10,6 +10,10 @@ class VisitorProvider extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
   List<VisitorModel> visitors = [];
+
+  bool get hasPendingSync => HiveService.getUnsyncedVisitors().isNotEmpty;
+
+  int get pendingSyncCount => HiveService.getUnsyncedVisitors().length;
 
   VisitorProvider() {
     _loadLocal();
