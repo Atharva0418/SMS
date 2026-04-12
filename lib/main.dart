@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:sms/screens/home_screen.dart';
+import 'core/local/hive_service.dart';
 import 'providers/visitor_provider.dart';
-import 'screens/add_visitor_screen.dart';
+import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
+  await HiveService.init(); // registers adapter + opens box
   runApp(const MyApp());
 }
 
