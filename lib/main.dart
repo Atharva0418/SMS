@@ -46,7 +46,6 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
   @override
   void initState() {
     super.initState();
-    // No variable — call inline directly
     Connectivity().onConnectivityChanged.listen((
       List<ConnectivityResult> results,
     ) {
@@ -76,7 +75,7 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
         ],
       ),
     );
-    // Auto-dismiss after 3 seconds
+
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentMaterialBanner();

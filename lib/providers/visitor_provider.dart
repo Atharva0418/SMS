@@ -30,11 +30,9 @@ class VisitorProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Always save locally first
       await HiveService.saveVisitor(visitor);
       visitors = HiveService.getAllVisitors();
 
-      // Attempt API sync if online
       final online = await ConnectivityService.isOnline();
       if (online) {
         await _syncVisitor(visitor);
@@ -62,7 +60,6 @@ class VisitorProvider extends ChangeNotifier {
     }
   }
 
-  /// Call this on app foreground / reconnect to flush unsynced entries
   Future<void> syncPending() async {
     final online = await ConnectivityService.isOnline();
     if (!online) return;
