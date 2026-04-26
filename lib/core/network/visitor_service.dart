@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/models/visitor_model.dart';
 
 class VisitorService {
@@ -7,7 +8,7 @@ class VisitorService {
   VisitorService()
     : _dio = Dio(
         BaseOptions(
-          baseUrl: 'http://192.168.1.2:8080',
+          baseUrl: '${dotenv.env['BASE_URL']}',
           connectTimeout: const Duration(seconds: 5),
           receiveTimeout: const Duration(seconds: 5),
         ),
