@@ -3,16 +3,21 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'providers/complaint_provider.dart';
+
 import 'core/local/hive_service.dart';
 import 'providers/visitor_provider.dart';
+import 'providers/complaint_provider.dart';
+import 'providers/auth_provider.dart';
+import 'providers/notice_provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/pending_approval_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: '.env');
   await Hive.initFlutter();
-  await HiveService.init(); // now opens both visitors + complaints boxes
+  await HiveService.init();
   runApp(const MyApp());
 }
 
@@ -23,8 +28,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
         ChangeNotifierProvider(create: (_) => VisitorProvider()),
         ChangeNotifierProvider(create: (_) => ComplaintProvider()),
+        ChangeNotifierProvider(create: (_) => NoticeProvider()),
       ],
       child: MaterialApp(
         title: 'Society MS',
@@ -32,12 +39,32 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
           useMaterial3: true,
         ),
-        home: const ConnectivityWrapper(child: HomeScreen()),
+        home: const _AuthGate(),
       ),
     );
   }
 }
 
+/// Routes to the correct screen based on auth state.
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
+    return switch (auth.state) {
+      AuthState.unknown => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      AuthState.unauthenticated => const LoginScreen(),
+      AuthState.pendingApproval => const PendingApprovalScreen(),
+      AuthState.authenticated => const ConnectivityWrapper(child: HomeScreen()),
+    };
+  }
+}
+
+/// Unchanged connectivity banner logic — now wraps only the authenticated shell.
 class ConnectivityWrapper extends StatefulWidget {
   final Widget child;
   const ConnectivityWrapper({required this.child, super.key});
@@ -82,11 +109,8 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
         ],
       ),
     );
-
     Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-      }
+      if (mounted) ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
     });
   }
 
