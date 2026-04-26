@@ -1,17 +1,38 @@
 package com.atharvadholakia.sms_backend.models;
 
-import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 @Entity
-@Table(name = "visitors")
+@Table(
+    name = "visitors",
+    // Prevents duplicate records when the client retries a failed sync:
+    // the same visitor cannot check in to the same flat twice at the exact
+    // same instant, so (phone, check_in_time) is a natural idempotency key.
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uq_visitors_phone_checkin",
+            columnNames = {"phone", "check_in_time"}
+        )
+    }
+)
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Visitor {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

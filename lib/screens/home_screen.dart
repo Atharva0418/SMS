@@ -28,10 +28,6 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     _FeatureGrid(),
                     const SizedBox(height: 24),
-                    _SectionLabel('Recent visitors'),
-                    const SizedBox(height: 10),
-                    _RecentVisitors(),
-                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -294,118 +290,6 @@ class _FeatureCard extends StatelessWidget {
               style: TextStyle(fontSize: 11, color: Colors.grey[500]),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RecentVisitors extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // Placeholder — replace with real data from VisitorProvider in SMS-6
-    final recent = [
-      {'name': 'Rahul Shah', 'flat': '101', 'time': '10:32 AM', 'status': 'In'},
-      {
-        'name': 'Priya Kumar',
-        'flat': '204',
-        'time': '9:15 AM',
-        'status': 'Out',
-      },
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black.withOpacity(0.07)),
-      ),
-      child: Column(
-        children: recent.asMap().entries.map((entry) {
-          final i = entry.key;
-          final v = entry.value;
-          final initials = v['name']!
-              .split(' ')
-              .map((w) => w[0])
-              .take(2)
-              .join();
-          final isLast = i == recent.length - 1;
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: const Color(0xFFEEEDFE),
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF534AB7),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          v['name']!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          'Flat ${v['flat']} · ${v['time']}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    _StatusPill(v['status']!),
-                  ],
-                ),
-              ),
-              if (!isLast)
-                Divider(height: 1, color: Colors.black.withOpacity(0.06)),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  final String status;
-  const _StatusPill(this.status);
-
-  @override
-  Widget build(BuildContext context) {
-    final isIn = status == 'In';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: isIn ? const Color(0xFFE1F5EE) : const Color(0xFFF1EFE8),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: isIn ? const Color(0xFF0F6E56) : const Color(0xFF5F5E5A),
         ),
       ),
     );

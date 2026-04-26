@@ -43,10 +43,13 @@ class VisitorModel extends HiveObject {
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
+  /// Sends [createdAt] as [checkInTime] so the server stores the real
+  /// entry time rather than the time the sync request arrives.
   Map<String, dynamic> toJson() => {
     'name': name,
     'phone': phone,
     'flatNumber': flatNumber,
+    'checkInTime': createdAt.toIso8601String(),
   };
 
   factory VisitorModel.fromJson(Map<String, dynamic> json) => VisitorModel(
