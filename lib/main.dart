@@ -10,6 +10,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await HiveService.init();
+  await HiveService.visitorBox.clear();
   runApp(const MyApp());
 }
 

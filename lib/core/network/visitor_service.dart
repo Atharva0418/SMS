@@ -5,17 +5,16 @@ class VisitorService {
   final Dio _dio;
 
   VisitorService()
-      : _dio = Dio(BaseOptions(
-    baseUrl: 'http://192.168.1.3:8080',
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 5),
-  ));
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: 'http://192.168.1.2:8080',
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 5),
+        ),
+      );
 
   Future<VisitorModel> createVisitor(VisitorModel visitor) async {
-    final response = await _dio.post(
-      '/api/visitors',
-      data: visitor.toJson(),
-    );
+    final response = await _dio.post('/api/visitors', data: visitor.toJson());
     return VisitorModel.fromJson(response.data);
   }
 
