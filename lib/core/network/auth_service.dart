@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../local/secure_storage.dart';
 
 class AuthService {
@@ -27,6 +28,7 @@ class AuthService {
       role: data['role'],
       userId: data['userId'],
       name: data['name'],
+      flatNumber: data['flatNumber'], // null for ADMIN/STAFF
     );
 
     return data['role'] as String;

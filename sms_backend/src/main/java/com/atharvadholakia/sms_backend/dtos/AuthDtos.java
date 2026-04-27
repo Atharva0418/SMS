@@ -18,10 +18,11 @@ public class AuthDtos {
     ) {}
 
     public record AuthResponse(
-        String token,
-        String role,
-        String name,
-        Long   userId
+        String  token,
+        String  role,
+        String  name,
+        Long    userId,
+        Integer flatNumber  // null for ADMIN and STAFF
     ) {}
 
     public record NoticeRequest(

@@ -19,14 +19,24 @@ public class VisitorService {
     private final VisitorRepository visitorRepository;
     private final UserRepository    userRepository;
 
-    /** Returns entries scoped to the caller's role. */
+    /**
+     * Returns visitor entries scoped to the caller's role.
+     *
+     * ADMIN  — every entry (full audit view).
+     * STAFF  — every entry (they log visitors on behalf of the whole building
+     *          and must be able to look up any arrival, regardless of who
+     *          created the record).
+     * RESIDENT — only visitors whose destination flat matches the resident's
+     *            own flat number. We intentionally do NOT filter by phone here:
+     *            a resident's phone might coincidentally appear on an unrelated
+     *            visitor record, leaking data they should not see.
+     */
     public List<Visitor> getAll(AuthUser principal) {
         return switch (principal.role()) {
-            case "ADMIN"    -> visitorRepository.findAll();
-            case "STAFF"    -> visitorRepository.findByCreatedById(principal.id());
+            case "ADMIN", "STAFF" -> visitorRepository.findAll();
             case "RESIDENT" -> {
                 User u = userRepository.findById(principal.id()).orElseThrow();
-                yield visitorRepository.findByFlatNumberOrPhone(u.getFlatNumber(), u.getPhone());
+                yield visitorRepository.findByFlatNumber(u.getFlatNumber());
             }
             default -> List.of();
         };

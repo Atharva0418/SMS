@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../core/local/secure_storage.dart';
 import '../core/network/auth_service.dart';
 
@@ -11,6 +12,7 @@ class AuthProvider extends ChangeNotifier {
   String? _role;
   String? _name;
   int? _userId;
+  int? _flatNumber;
   String? _errorMessage;
   bool _isLoading = false;
 
@@ -18,6 +20,7 @@ class AuthProvider extends ChangeNotifier {
   String? get role => _role;
   String? get name => _name;
   int? get userId => _userId;
+  int? get flatNumber => _flatNumber;
   String? get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
 
@@ -34,6 +37,7 @@ class AuthProvider extends ChangeNotifier {
       _role = await SecureStorage.getRole();
       _name = await SecureStorage.getName();
       _userId = await SecureStorage.getUserId();
+      _flatNumber = await SecureStorage.getFlatNumber();
       _state = AuthState.authenticated;
     }
     notifyListeners();
@@ -48,10 +52,10 @@ class AuthProvider extends ChangeNotifier {
       _role = await _authService.login(email, password);
       _name = await SecureStorage.getName();
       _userId = await SecureStorage.getUserId();
+      _flatNumber = await SecureStorage.getFlatNumber();
       _state = AuthState.authenticated;
     } on Exception catch (e) {
       final msg = e.toString();
-      // Backend sends 403 with "Account not yet approved" for PENDING accounts
       if (msg.contains('approved')) {
         _state = AuthState.pendingApproval;
       } else {
@@ -98,6 +102,7 @@ class AuthProvider extends ChangeNotifier {
     _role = null;
     _name = null;
     _userId = null;
+    _flatNumber = null;
     _state = AuthState.unauthenticated;
     notifyListeners();
   }

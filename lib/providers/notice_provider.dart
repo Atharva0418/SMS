@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../core/network/notice_service.dart';
 import '../data/models/notice_model.dart';
 

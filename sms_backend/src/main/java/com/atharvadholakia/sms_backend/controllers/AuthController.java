@@ -1,18 +1,11 @@
 package com.atharvadholakia.sms_backend.controllers;
 
+import com.atharvadholakia.sms_backend.dtos.AuthDtos.*;
+import com.atharvadholakia.sms_backend.services.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.atharvadholakia.sms_backend.dtos.AuthDtos.AuthResponse;
-import com.atharvadholakia.sms_backend.dtos.AuthDtos.LoginRequest;
-import com.atharvadholakia.sms_backend.dtos.AuthDtos.RegisterRequest;
-import com.atharvadholakia.sms_backend.services.AuthService;
-
-import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")

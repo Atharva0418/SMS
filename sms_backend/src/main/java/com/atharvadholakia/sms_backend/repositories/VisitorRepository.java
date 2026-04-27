@@ -13,9 +13,9 @@ public interface VisitorRepository extends JpaRepository<Visitor, Long> {
 
     Optional<Visitor> findByPhoneAndCheckInTime(String phone, LocalDateTime checkInTime);
 
-    // RESIDENT: filter by flat number or phone
-    List<Visitor> findByFlatNumberOrPhone(Integer flatNumber, String phone);
+    // RESIDENT: only visitors destined for their flat
+    List<Visitor> findByFlatNumber(Integer flatNumber);
 
-    // STAFF: only entries they created
+    // STAFF: kept for potential future use (e.g. per-staff activity report)
     List<Visitor> findByCreatedById(Long userId);
 }

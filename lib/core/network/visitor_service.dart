@@ -1,26 +1,21 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/models/visitor_model.dart';
+import 'api_client.dart';
 
+/// Uses the shared [ApiClient] so every request carries the JWT automatically.
+/// This fixes the bug where offline-created visitor entries would never sync
+/// once the backend required authentication — the old bare Dio had no headers,
+/// received HTTP 401, which was silently swallowed, leaving entries unsynced.
 class VisitorService {
-  final Dio _dio;
-
-  VisitorService()
-    : _dio = Dio(
-        BaseOptions(
-          baseUrl: '${dotenv.env['BASE_URL']}',
-          connectTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 5),
-        ),
-      );
-
   Future<VisitorModel> createVisitor(VisitorModel visitor) async {
-    final response = await _dio.post('/api/visitors', data: visitor.toJson());
+    final response = await ApiClient.instance.post(
+      '/api/visitors',
+      data: visitor.toJson(),
+    );
     return VisitorModel.fromJson(response.data);
   }
 
   Future<List<VisitorModel>> getVisitors() async {
-    final response = await _dio.get('/api/visitors');
+    final response = await ApiClient.instance.get('/api/visitors');
     return (response.data as List)
         .map((e) => VisitorModel.fromJson(e))
         .toList();
