@@ -11,29 +11,51 @@ class VisitorProvider extends ChangeNotifier {
   String? errorMessage;
   List<VisitorModel> visitors = [];
 
-  // Prevents concurrent sync runs (e.g. rapid reconnect events firing twice).
   bool _isSyncing = false;
 
-  bool get hasPendingSync => HiveService.getUnsyncedVisitors().isNotEmpty;
-  int get pendingSyncCount => HiveService.getUnsyncedVisitors().length;
+  /// The flat number of the logged-in resident, or null for ADMIN/STAFF.
+  /// Set this immediately after login via [setResidentFlat].
+  int?   _residentFlat;
+  String _role = '';
+
+  bool get hasPendingSync  => HiveService.getUnsyncedVisitors().isNotEmpty;
+  int  get pendingSyncCount => HiveService.getUnsyncedVisitors().length;
 
   VisitorProvider() {
     _loadLocal();
   }
 
+  /// Called from the widget tree (or main) once auth state is known.
+  void configure({required String role, int? flatNumber}) {
+    _role         = role;
+    _residentFlat = flatNumber;
+    _loadLocal();
+  }
+
   void _loadLocal() {
-    visitors = HiveService.getAllVisitors();
+    final all = HiveService.getAllVisitors();
+    visitors = _filter(all);
     notifyListeners();
   }
 
+  /// Mirrors the server-side rule:
+  ///   ADMIN / STAFF — all entries
+  ///   RESIDENT      — only entries whose flatNumber matches theirs
+  List<VisitorModel> _filter(List<VisitorModel> all) {
+    if (_role == 'RESIDENT' && _residentFlat != null) {
+      return all.where((v) => v.flatNumber == _residentFlat).toList();
+    }
+    return all;
+  }
+
   Future<bool> addVisitor(VisitorModel visitor) async {
-    isLoading = true;
+    isLoading    = true;
     errorMessage = null;
     notifyListeners();
 
     try {
       await HiveService.saveVisitor(visitor);
-      visitors = HiveService.getAllVisitors();
+      _loadLocal();
 
       final online = await ConnectivityService.isOnline();
       if (online) {
@@ -50,24 +72,15 @@ class VisitorProvider extends ChangeNotifier {
     }
   }
 
-  /// Uploads a single [visitor] to the backend and marks it synced on success.
-  /// Failures are intentionally swallowed: the entry stays [isSynced]=false
-  /// and will be retried by [syncPending] on the next reconnect.
   Future<void> _syncVisitor(VisitorModel visitor) async {
     try {
       final synced = await _apiService.createVisitor(visitor);
       await HiveService.markSynced(visitor, synced.id!);
     } on Exception {
-      // Sync failed — entry stays unsynced and will be retried later.
+      // Stays unsynced; retried on next reconnect.
     }
   }
 
-  /// Uploads all locally-stored unsynced entries to the backend.
-  ///
-  /// Each entry is attempted independently — a failure for one entry does not
-  /// block the others. A [_isSyncing] guard ensures only one bulk-sync runs at
-  /// a time, preventing duplicate POST calls when [syncPending] is triggered
-  /// multiple times in quick succession (e.g. flapping connectivity).
   Future<void> syncPending() async {
     if (_isSyncing) return;
 
@@ -78,16 +91,13 @@ class VisitorProvider extends ChangeNotifier {
     try {
       final pending = HiveService.getUnsyncedVisitors();
       for (final visitor in pending) {
-        // Re-check online status between entries so we stop early on drop-out.
         final stillOnline = await ConnectivityService.isOnline();
         if (!stillOnline) break;
         await _syncVisitor(visitor);
       }
     } finally {
       _isSyncing = false;
-      // Refresh list and pending count regardless of how sync went.
-      visitors = HiveService.getAllVisitors();
-      notifyListeners();
+      _loadLocal();
     }
   }
 }

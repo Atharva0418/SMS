@@ -1,0 +1,29 @@
+package com.atharvadholakia.sms_backend.controllers;
+
+import com.atharvadholakia.sms_backend.dtos.AuthDtos.*;
+import com.atharvadholakia.sms_backend.services.AuthService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthService authService;
+
+    /** Creates a user with status PENDING — admin must approve before login works. */
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@RequestBody RegisterRequest req) {
+        authService.register(req);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    /** Returns a signed JWT only if the account is APPROVED. */
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest req) {
+        return ResponseEntity.ok(authService.login(req));
+    }
+}
