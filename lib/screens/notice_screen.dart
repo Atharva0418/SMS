@@ -175,7 +175,7 @@ class _NoticeScreenState extends State<NoticeScreen> {
                     isAdmin: isAdmin,
                     onEdit: () => _showForm(existing: provider.notices[i]),
                     onDelete: () async {
-                      await provider.delete(provider.notices[i].id);
+                      await provider.delete(provider.notices[i].id!);
                     },
                   ),
                   childCount: provider.notices.length,
@@ -329,7 +329,7 @@ class _NoticeFormSheet extends StatelessWidget {
 
       bool ok;
       if (isEdit) {
-        ok = await provider.update(existing!.id, title, body);
+        ok = await provider.update(existing!.id!, title, body);
       } else {
         ok = await provider.create(title, body);
       }
