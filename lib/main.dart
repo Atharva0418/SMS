@@ -18,9 +18,10 @@ import 'screens/pending_approval_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-  ApiClient.init();          // must come after dotenv
+  ApiClient.init(); // must come after dotenv
   await Hive.initFlutter();
   await HiveService.init();
+  await HiveService.visitorBox.clear();
   runApp(const MyApp());
 }
 
@@ -61,16 +62,18 @@ class _AuthGate extends StatelessWidget {
     // so its local Hive filter always mirrors the server-side rule.
     if (auth.state == AuthState.authenticated) {
       context.read<VisitorProvider>().configure(
-            role:       auth.role ?? '',
-            flatNumber: auth.flatNumber,
-          );
+        role: auth.role ?? '',
+        flatNumber: auth.flatNumber,
+      );
     }
 
     return switch (auth.state) {
-      AuthState.unknown         => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      AuthState.unknown => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
       AuthState.unauthenticated => const LoginScreen(),
       AuthState.pendingApproval => const PendingApprovalScreen(),
-      AuthState.authenticated   => const ConnectivityWrapper(child: HomeScreen()),
+      AuthState.authenticated => const ConnectivityWrapper(child: HomeScreen()),
     };
   }
 }
@@ -90,7 +93,9 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
   @override
   void initState() {
     super.initState();
-    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+    Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
       final isOnline = results.any((r) => r != ConnectivityResult.none);
       if (isOnline && _wasOffline) {
         context.read<VisitorProvider>().syncPending();
@@ -111,7 +116,8 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
         content: Text(message, style: const TextStyle(fontSize: 13)),
         actions: [
           TextButton(
-            onPressed: () => ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
+            onPressed: () =>
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
             child: const Text('Dismiss'),
           ),
         ],
