@@ -18,11 +18,39 @@ class ComplaintProvider extends ChangeNotifier {
 
   ComplaintProvider() {
     _loadLocal();
+    // Fetch from server on startup so every device always has up-to-date data.
+    _fetchFromServer();
   }
 
   void _loadLocal() {
+    // No role filter — all users see all complaints.
     complaints = HiveService.getAllComplaints();
     notifyListeners();
+  }
+
+  /// Pull all complaints from MySQL, replace the local Hive cache
+  /// (preserving any unsynced offline entries), then reload the view.
+  Future<void> _fetchFromServer() async {
+    final online = await ConnectivityService.isOnline();
+    if (!online) return;
+
+    try {
+      final serverComplaints = await _apiService.getComplaints();
+
+      final unsynced = HiveService.getUnsyncedComplaints();
+      await HiveService.complaintBox.clear();
+
+      for (final c in unsynced) {
+        await HiveService.saveComplaint(c);
+      }
+      for (final c in serverComplaints) {
+        await HiveService.saveComplaint(c);
+      }
+
+      _loadLocal();
+    } on Exception {
+      // Server unreachable — keep showing local cache.
+    }
   }
 
   Future<bool> addComplaint(ComplaintModel complaint) async {

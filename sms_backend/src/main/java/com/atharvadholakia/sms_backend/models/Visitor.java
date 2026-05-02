@@ -1,5 +1,6 @@
 package com.atharvadholakia.sms_backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -43,7 +44,9 @@ public class Visitor {
     @Column(nullable = false, length = 20)
     private String status;
 
-    // The staff member or admin who logged this visitor entry
+    // Lazy-loaded — Jackson must never touch this outside a Hibernate session.
+    // The Flutter client does not need createdBy; it only needs the scalar fields above.
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;

@@ -14,7 +14,6 @@ class VisitorProvider extends ChangeNotifier {
   bool _isSyncing = false;
 
   /// The flat number of the logged-in resident, or null for ADMIN/STAFF.
-  /// Set this immediately after login via [setResidentFlat].
   int?   _residentFlat;
   String _role = '';
 
@@ -25,17 +24,51 @@ class VisitorProvider extends ChangeNotifier {
     _loadLocal();
   }
 
-  /// Called from the widget tree (or main) once auth state is known.
+  /// Called from the widget tree once auth state is known.
+  /// Configures the role/flat filter, loads local cache, then fetches fresh
+  /// data from the server so a new device always has up-to-date records.
   void configure({required String role, int? flatNumber}) {
     _role         = role;
     _residentFlat = flatNumber;
     _loadLocal();
+    // Kick off a server fetch so new devices get real data immediately.
+    _fetchFromServer();
   }
 
   void _loadLocal() {
     final all = HiveService.getAllVisitors();
     visitors = _filter(all);
     notifyListeners();
+  }
+
+  /// Pull fresh visitor data from MySQL, write synced entries to Hive,
+  /// then reload the local view. Unsynced (offline-created) entries are
+  /// preserved — they are only replaced if the server already has them.
+  Future<void> _fetchFromServer() async {
+    final online = await ConnectivityService.isOnline();
+    if (!online) return;
+
+    try {
+      final serverVisitors = await _apiService.getVisitors();
+
+      // Clear only synced entries; keep unsynced (pending) ones.
+      final unsynced = HiveService.getUnsyncedVisitors();
+      await HiveService.visitorBox.clear();
+
+      // Re-add unsynced entries first.
+      for (final v in unsynced) {
+        await HiveService.saveVisitor(v);
+      }
+
+      // Add all server entries (mark as synced).
+      for (final v in serverVisitors) {
+        await HiveService.saveVisitor(v);
+      }
+
+      _loadLocal();
+    } on Exception {
+      // Server unreachable — keep showing whatever is in local cache.
+    }
   }
 
   /// Mirrors the server-side rule:

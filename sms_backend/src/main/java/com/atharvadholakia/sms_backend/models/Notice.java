@@ -1,5 +1,6 @@
 package com.atharvadholakia.sms_backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +24,8 @@ public class Notice {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String body;
 
+    // Lazy-loaded — Jackson must never touch this outside a Hibernate session.
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;

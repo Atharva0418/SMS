@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import '../core/local/hive_service.dart';
+import 'package:provider/provider.dart';
 import '../data/models/visitor_model.dart';
+import '../providers/visitor_provider.dart';
 
 // ── Palette (shared with home / add-visitor) ──────────────────────────────────
 const _navy = Color(0xFF0D1B2A);
@@ -119,12 +119,16 @@ class _VisitorLogScreenState extends State<VisitorLogScreen>
             ),
           ),
         ],
-        body: ValueListenableBuilder(
-          valueListenable: HiveService.visitorBox.listenable(),
-          builder: (context, box, _) {
-            final all = box.values.toList()
-              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        // FIX: use Consumer<VisitorProvider> instead of ValueListenableBuilder
+        // on the raw Hive box. The provider fetches from the server on startup
+        // and populates Hive, so new devices see real data immediately.
+        body: Consumer<VisitorProvider>(
+          builder: (context, provider, _) {
+            if (provider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
+            final all = provider.visitors;
             final synced = all.where((v) => v.isSynced).toList();
             final pending = all.where((v) => !v.isSynced).toList();
 
@@ -135,14 +139,14 @@ class _VisitorLogScreenState extends State<VisitorLogScreen>
                   visitors: synced,
                   emptyMessage: 'No synced entries yet',
                   emptySubtext:
-                      'Entries will appear here once they\nupload to the server.',
+                  'Entries will appear here once they\nupload to the server.',
                   isSynced: true,
                 ),
                 _VisitorList(
                   visitors: pending,
                   emptyMessage: 'No pending entries',
                   emptySubtext:
-                      'All visitor entries have been\nsynced to the server.',
+                  'All visitor entries have been\nsynced to the server.',
                   isSynced: false,
                 ),
               ],
@@ -205,18 +209,8 @@ class _VisitorCard extends StatelessWidget {
 
   String _formatDate(DateTime dt) {
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
