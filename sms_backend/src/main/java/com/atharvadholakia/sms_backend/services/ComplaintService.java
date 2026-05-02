@@ -18,12 +18,9 @@ public class ComplaintService {
     private final ComplaintRepository complaintRepository;
     private final UserRepository      userRepository;
 
+    /** All authenticated users see all complaints. */
     public List<Complaint> getAll(AuthUser principal) {
-        return switch (principal.role()) {
-            case "ADMIN"             -> complaintRepository.findAll();
-            case "STAFF", "RESIDENT" -> complaintRepository.findByCreatedById(principal.id());
-            default                  -> List.of();
-        };
+        return complaintRepository.findAll();
     }
 
     /** Tag is set server-side from the JWT role — client cannot override it. */
@@ -40,9 +37,9 @@ public class ComplaintService {
 
     /**
      * Permission rules:
-     *  ADMIN  — any field, can set status to RESOLVED
+     *  ADMIN    — any field, can set status to RESOLVED
      *  RESIDENT — own complaints, description only (cannot change status)
-     *  STAFF  — cannot edit
+     *  STAFF    — cannot edit
      */
     public Complaint update(Long id, Complaint patch, AuthUser principal) {
         Complaint existing = complaintRepository.findById(id)
@@ -59,7 +56,6 @@ public class ComplaintService {
                     throw new SecurityException("Not authorised");
                 }
                 existing.setDescription(patch.getDescription());
-                // Status changes are NOT allowed for residents
             }
             default -> throw new SecurityException("STAFF cannot edit complaints");
         }

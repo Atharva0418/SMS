@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import '../core/local/hive_service.dart';
 import '../data/models/complaint_model.dart';
 import '../providers/complaint_provider.dart';
 
@@ -56,12 +54,16 @@ class _ComplaintScreenState extends State<ComplaintScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _surface,
-      body: ValueListenableBuilder(
-        valueListenable: HiveService.complaintBox.listenable(),
-        builder: (context, box, _) {
-          final all = box.values.toList()
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      // FIX: use Consumer<ComplaintProvider> instead of ValueListenableBuilder
+      // on the raw Hive box. The provider fetches from the server on startup
+      // so new devices (or reinstalled apps) always see their real complaints.
+      body: Consumer<ComplaintProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
+          final all = provider.complaints;
           final synced = all.where((c) => c.isSynced).toList();
           final pending = all.where((c) => !c.isSynced).toList();
 
@@ -84,13 +86,13 @@ class _ComplaintScreenState extends State<ComplaintScreen>
                       complaints: synced,
                       emptyMessage: 'No synced complaints yet.',
                       emptySubtext:
-                          'Complaints will appear here once they\nupload to the server.',
+                      'Complaints will appear here once they\nupload to the server.',
                     ),
                     _ComplaintList(
                       complaints: pending,
                       emptyMessage: 'No pending complaints.',
                       emptySubtext:
-                          'All complaints have been\nsynced to the server.',
+                      'All complaints have been\nsynced to the server.',
                     ),
                   ],
                 ),
@@ -118,7 +120,7 @@ class _ComplaintScreenState extends State<ComplaintScreen>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Hero Header — matches home screen style
+// Hero Header
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ComplaintHeader extends StatelessWidget {
@@ -271,7 +273,7 @@ class _ComplaintHeader extends StatelessWidget {
   }
 }
 
-// ── Reused stat pill (identical to home screen) ───────────────────────────────
+// ── Reused stat pill ──────────────────────────────────────────────────────────
 
 class _StatPill extends StatelessWidget {
   final String value;
@@ -339,7 +341,7 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-// ── Geometric Pattern (identical to home screen) ──────────────────────────────
+// ── Geometric Pattern ─────────────────────────────────────────────────────────
 
 class _GeometricPattern extends StatelessWidget {
   @override
@@ -407,7 +409,7 @@ class _ComplaintList extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Card — rethemed to match home palette
+// Card
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ComplaintCard extends StatelessWidget {
@@ -417,18 +419,8 @@ class _ComplaintCard extends StatelessWidget {
 
   String _formatDate(DateTime dt) {
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
     final minute = dt.minute.toString().padLeft(2, '0');
@@ -465,7 +457,6 @@ class _ComplaintCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                // Flat badge — uses navy tint to match home screen's indigo chip style
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -485,7 +476,6 @@ class _ComplaintCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                // Status chip
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -508,7 +498,6 @@ class _ComplaintCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            // Divider line
             Container(height: 0.5, color: _divider),
             const SizedBox(height: 10),
             Text(
@@ -559,7 +548,7 @@ class _ComplaintCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Empty state — rethemed
+// Empty state
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
@@ -614,7 +603,7 @@ class _EmptyState extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Add complaint form — rethemed
+// Add complaint form (unchanged logic, kept inline)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AddComplaintScreen extends StatefulWidget {
@@ -687,7 +676,6 @@ class _AddComplaintScreenState extends State<_AddComplaintScreen> {
       backgroundColor: _surface,
       body: CustomScrollView(
         slivers: [
-          // ── Header matching home/complaint style ───────────────────────
           SliverToBoxAdapter(
             child: Container(
               decoration: const BoxDecoration(color: _navy),
@@ -753,8 +741,6 @@ class _AddComplaintScreenState extends State<_AddComplaintScreen> {
               ),
             ),
           ),
-
-          // ── Form body ─────────────────────────────────────────────────
           SliverPadding(
             padding: const EdgeInsets.all(20),
             sliver: SliverToBoxAdapter(
@@ -763,7 +749,6 @@ class _AddComplaintScreenState extends State<_AddComplaintScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Section label
                     Text(
                       'DETAILS'.toUpperCase(),
                       style: const TextStyle(
@@ -774,8 +759,6 @@ class _AddComplaintScreenState extends State<_AddComplaintScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-
-                    // ── Flat number field
                     _NavyTextField(
                       controller: _flatCtrl,
                       label: 'Flat number',
@@ -792,8 +775,6 @@ class _AddComplaintScreenState extends State<_AddComplaintScreen> {
                       },
                     ),
                     const SizedBox(height: 12),
-
-                    // ── Description field
                     _NavyTextField(
                       controller: _descCtrl,
                       label: 'Description',
@@ -812,8 +793,6 @@ class _AddComplaintScreenState extends State<_AddComplaintScreen> {
                       },
                     ),
                     const SizedBox(height: 28),
-
-                    // ── Submit button
                     SizedBox(
                       width: double.infinity,
                       child: GestureDetector(
@@ -834,22 +813,22 @@ class _AddComplaintScreenState extends State<_AddComplaintScreen> {
                           child: Center(
                             child: isLoading
                                 ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
                                 : const Text(
-                                    'Submit complaint',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.2,
-                                    ),
-                                  ),
+                              'Submit complaint',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -865,9 +844,7 @@ class _AddComplaintScreenState extends State<_AddComplaintScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared themed text field
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Shared themed text field ───────────────────────────────────────────────────
 
 class _NavyTextField extends StatelessWidget {
   final TextEditingController controller;

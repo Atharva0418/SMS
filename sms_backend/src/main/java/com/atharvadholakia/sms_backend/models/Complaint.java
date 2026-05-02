@@ -1,5 +1,6 @@
 package com.atharvadholakia.sms_backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,6 +34,9 @@ public class Complaint {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // Lazy-loaded — Jackson must never touch this outside a Hibernate session.
+    // The Flutter client does not need createdBy; ownership is enforced server-side.
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;

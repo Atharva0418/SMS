@@ -21,7 +21,10 @@ Future<void> main() async {
   ApiClient.init(); // must come after dotenv
   await Hive.initFlutter();
   await HiveService.init();
-  await HiveService.visitorBox.clear();
+  // NOTE: Do NOT clear Hive boxes here. Clearing on every launch means a
+  // resident logging in on a new (or reinstalled) device sees nothing until
+  // they create new entries. The providers now fetch fresh data from the
+  // server on startup and populate Hive themselves.
   runApp(const MyApp());
 }
 
@@ -78,7 +81,7 @@ class _AuthGate extends StatelessWidget {
   }
 }
 
-/// Unchanged connectivity banner logic — now wraps only the authenticated shell.
+/// Connectivity banner logic — wraps only the authenticated shell.
 class ConnectivityWrapper extends StatefulWidget {
   final Widget child;
   const ConnectivityWrapper({required this.child, super.key});
@@ -94,8 +97,8 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
   void initState() {
     super.initState();
     Connectivity().onConnectivityChanged.listen((
-      List<ConnectivityResult> results,
-    ) {
+        List<ConnectivityResult> results,
+        ) {
       final isOnline = results.any((r) => r != ConnectivityResult.none);
       if (isOnline && _wasOffline) {
         context.read<VisitorProvider>().syncPending();
